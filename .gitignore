@@ -3,9 +3,9 @@
 .vscode
 
 # stan model binaries and headers
-src/dartboard/stan_models/*.hpp
 src/dartboard/stan_models/*/*.hpp
-src/dartboard/stan_models/transient/decay_exponential
+src/dartboard/stan_models/*/*/*.hpp
+src/dartboard/stan_models/transient/decay_exponential/decay_exponential
 
 # temp and result files for examples
 examples/stan_data.json

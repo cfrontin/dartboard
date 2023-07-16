@@ -1,1 +1,1 @@
-from .decay_exponential import DecayExponential
+from .decay_exponential.decay_exponential import DecayExponential

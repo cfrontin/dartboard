@@ -18,11 +18,15 @@ std_asy = 1.0
 Tlambda_trans = (t1 - t0) / 4.0
 A0_trans = 7.5
 
+## generate the synthetic dataset and plot its mean and noisy sample
+
 ybar_span = mean_asy + A0_trans * np.exp(-t_span / Tlambda_trans)
 y_span = ybar_span + std_asy * rng.randn(*t_span.shape)
 
 plt.plot(t_span, ybar_span, "--")
 plt.plot(t_span, y_span, ".")
+
+## fit the transient
 
 tf = transient.TransientFitter()
 
@@ -39,6 +43,8 @@ tf.fit(t_span, y_span, prior=prior_guess)
 
 fit_result = tf.optim.stan_variables()
 pprint.pprint(fit_result)
+
+## get the model function and plot the 95% CI
 
 model_fun = tf.model_type.model_function(fit_result)
 
