@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dartboard"
+authors = [
+    {name = "Cory Frontin", email = "cory.frontin@nrel.gov"},
+]
+description = "Tool for small-sample Bayesian system id of error models for ODE/PDE discretizations."
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "cmdstanpy",
+]
+version = "0.0.0a1"
