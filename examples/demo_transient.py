@@ -45,16 +45,18 @@ prior_guess = {
 tf.fit(t_span, y_span, prior=prior_guess)
 # extract the results from the cmdstanpy MLE(MAP) result
 fit_result = tf.optim.stan_variables()
-pprint.pprint(fit_result)
+print("fit complete. results:")
+pprint.pprint(fit_result, indent=2)
 
 ## get the model function and plot the 95% CI
 
+# the model type stores it's model form, grab it
 model_fun = tf.model_type.model_function(fit_result)
 
+# plot with z=0 (mean), and with +/- 1.96 (between them: 95% CI)
 p0 = plt.plot(t_span, model_fun(t_span), "-.")
 plt.plot(t_span, model_fun(t_span, z=-1.96), ":", c=p0[-1].get_color())
 plt.plot(t_span, model_fun(t_span, z=1.96), ":", c=p0[-1].get_color())
-
 plt.show()
 
 #
