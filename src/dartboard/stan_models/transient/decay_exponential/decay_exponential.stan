@@ -24,11 +24,6 @@ model {
   real alpha_T= pow(mu_T, 2)/pow(std_T, 2);
   real beta_T= mu_T/pow(std_T, 2);
 
-  print("alpha sigma:", alpha_sigma);
-  print("beta sigma:", beta_sigma);
-  print("alpha T:", alpha_T);
-  print("beta T:", beta_T);
-
   Jinf ~ normal(mu_J, std_J);
   sigma ~ gamma(alpha_sigma, beta_sigma);
   T_lambda ~ gamma(alpha_T, beta_T);

@@ -21,7 +21,6 @@ class BaseStanModel(abc.ABC):
         get the filename of the stan model for this class
         """
         fn_here = os.path.abspath(cls._file)
-        print(fn_here)
         fn_stan = os.path.splitext(fn_here)[0] + ".stan"
         return fn_stan
 
@@ -30,7 +29,6 @@ class BaseStanModel(abc.ABC):
         """
         get the keys for the prior for this problem
         """
-        print(cls._prior_keys)
         return cls._prior_keys
 
     @classmethod
@@ -48,7 +46,6 @@ class BaseStanModel(abc.ABC):
         """
         get the keys for the params for this problem
         """
-        print(cls._param_keys)
         return cls._param_keys
 
     @classmethod
@@ -64,4 +61,13 @@ class BaseStanModel(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def model_function(cls, params: dict[str, int | float] | None):
-        pass
+        """
+        take a parameterization of the inferred model and return a function to
+        show the model at that parameterization as a function of some
+        (problem-dependent) independent variables and a given z-score
+        """
+
+        def fun0(*var_indep, z: float = 0.0):
+            pass
+
+        return fun0

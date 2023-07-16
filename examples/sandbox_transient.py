@@ -28,8 +28,10 @@ plt.plot(t_span, y_span, ".")
 
 ## fit the transient
 
+# initialize the tool
 tf = transient.TransientFitter()
 
+# pack up the parameters to facilitate a prior guess
 prior_guess = {
     "mu_J": 5.0,
     "std_J": 0.5,
@@ -39,8 +41,9 @@ prior_guess = {
     "std_sigma": 1.0,
     "std_A": 3.0,
 }
+# fit using the independent/dependent data and the prior
 tf.fit(t_span, y_span, prior=prior_guess)
-
+# extract the results from the cmdstanpy MLE(MAP) result
 fit_result = tf.optim.stan_variables()
 pprint.pprint(fit_result)
 

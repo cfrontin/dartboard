@@ -63,7 +63,8 @@ class TransientFitter(object):
     ):
         if model_type not in _models_implemented:
             raise NotImplementedError(
-                f"model type '{model_type}' not implemented in stan.\nknown models: {_models_implemented}."
+                f"model type '{model_type}' not implemented in stan.\n"
+                + f"known models: {_models_implemented}."
             )
         else:
             self.model_type = _models_implemented[model_type]
@@ -81,25 +82,11 @@ class TransientFitter(object):
         self.optim = None
         self.sampling = None
 
-    def fit(
-        self,
-        t_data: np.ndarray,
-        g_data: np.ndarray,
-        prior: dict[str, int | float] | None = None,
-    ):
+    def validate_prior_settings(self, prior):
         """
-        fit a transient model using the maximum a posteriori estimate by MLE
-
-        parameters:
-        - t_data (np.ndarray): sequence of sampling times for transient fit
-        - g_data (np.ndarray): sequence of sample values for transient fit
-        - prior (optional, dict): definitions for the prior model
-
-        returns: none
+        make sure that the prior settings are either input correctly or set
+        correctly in the class already
         """
-        assert len(g_data) == len(t_data), "g(t) and t must match"
-        N_data = len(t_data)
-
         if (prior is None) and (self.prior is None):
             raise RuntimeError("user must specify a prior guess.")
         elif prior is not None:
@@ -107,22 +94,109 @@ class TransientFitter(object):
         else:  # use the default one
             prior = self.prior
 
+    @staticmethod
+    def validate_Ndata(t_in: np.ndarray, g_in: np.ndarray):
+        """
+        assert that the independent and dependent variables are the same length,
+        return that length if it matches
+        """
+        assert len(g_in) == len(t_in), "g(t) and t must match"
+        N_data = len(t_in)
+        return N_data
+
+    @staticmethod
+    def pack_and_stash_stan_data(
+        N_in: np.ndarray,
+        t_in: np.ndarray,
+        g_in: np.ndarray,
+        prior_in: dict[str, int | float],
+        fn_in: str,
+    ):
+        """
+        pack up the stan data for this case and save it as a json in the
+        working directory for access by cmdstan
+        """
+
         stan_data = (
             {
-                "N": N_data,
-                "t": t_data.tolist(),
-                "g": g_data.tolist(),
-                "mu_J": prior["mu_J"],
-                "std_J": prior["std_J"],
-                "mu_sigma": prior["mu_sigma"],
-                "std_sigma": prior["std_sigma"],
-                "std_A": prior["std_A"],
-                "mu_T": prior["mu_T"],
-                "std_T": prior["std_T"],
+                "N": N_in,
+                "t": t_in.tolist(),
+                "g": g_in.tolist(),
+                "mu_J": prior_in["mu_J"],
+                "std_J": prior_in["std_J"],
+                "mu_sigma": prior_in["mu_sigma"],
+                "std_sigma": prior_in["std_sigma"],
+                "std_A": prior_in["std_A"],
+                "mu_T": prior_in["mu_T"],
+                "std_T": prior_in["std_T"],
             },
-        )[0]
+        )[
+            0
+        ]  # black is killing me with these
 
-        with open("stan_data.json", "w") as iofile_json:
+        with open(fn_in, "w") as iofile_json:
             json.dump(stan_data, iofile_json, indent=2)
 
-        self.optim = self.model.optimize(data="stan_data.json")
+    def fit(
+        self,
+        t_data: np.ndarray,
+        g_data: np.ndarray,
+        prior: dict[str, int | float] | None = None,
+        optimizer_args: dict[str, any] = dict(),
+    ):
+        """
+        fit a transient model using the maximum a posteriori estimate by MLE
+
+        parameters
+        ----------
+        t_data: np.ndarray
+            sequence of sampling times for transient fit
+        g_data: np.ndarray
+            sequence of sample values for transient fit
+        prior: dict, optional
+            definitions for the prior model
+        optimizer_args: dict, optional
+            arguments to be passed through to cmdstanpy.CmdStanModel.optimize
+
+        """
+
+        # perform validations
+        N_data = self.validate_Ndata(t_data, g_data)
+        self.validate_prior_settings(prior)
+
+        # pack and run stan model
+        fn_stan_data = "stan_data.json"
+        self.pack_and_stash_stan_data(N_data, t_data, g_data, prior, fn_stan_data)
+        self.optim = self.model.optimize(data=fn_stan_data, **optimizer_args)
+
+    def sample(
+        self,
+        t_data: np.ndarray,
+        g_data: np.ndarray,
+        prior: dict[str, int | float] | None = None,
+        sample_args: dict[str, any] = dict(),
+    ):
+        """
+        sample from the posterior of transient models using HMC
+
+        parameters
+        ----------
+        t_data: np.ndarray
+            sequence of sampling times for transient fit
+        g_data: np.ndarray
+            sequence of sample values for transient fit
+        prior: dict, optional
+            definitions for the prior model
+        sample_args: dict, optional
+            arguments to be passed through to cmdstanpy.CmdStanModel.sample
+
+        """
+
+        # perform validations
+        N_data = self.validate_Ndata(t_data, g_data)
+        self.validate_prior_settings(prior)
+
+        # pack and run stan model
+        fn_stan_data = "stan_data.json"
+        self.pack_and_stash_stan_data(N_data, t_data, g_data, prior, fn_stan_data)
+        self.sampling = self.model.sample(data=fn_stan_data, **sample_args)
